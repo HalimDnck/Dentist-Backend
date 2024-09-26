@@ -1,0 +1,7 @@
+DEBUG=True
+SECRET_KEY=django-insecure-uh(@sr4pv0w)@u8)rqdy8x7l404-5h=tx08%^mgqk@r*r46r)0
+DB_NAME=project_alpha
+DB_USER=admin
+DB_PASSWORD=12345
+DB_HOST=localhost
+DB_PORT=5432
