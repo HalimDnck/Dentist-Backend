@@ -8,33 +8,14 @@ from user.models import User
 from rest_framework import status
 
 class AuthViewSet(viewsets.ViewSet):
-
-    @action(detail=False, methods=['post'])  # Burayı kontrol edin
-    def login(self, request):
-        username = request.data.get('username')
-        password = request.data.get('password')
-        
-        user = authenticate(request, username=username, password=password)
-
-        if user is None:
-            return Response({'error': 'Kullanıcı adı veya şifre yanlış.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        refresh = RefreshToken.for_user(user)
-
-        return Response({
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
-        })
-
-    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    @action(detail=False, methods=['get'])
     def user(self, request):
-        print('hey')
         user = request.user
 
         user_data = {
             'id': user.id,
             'email': user.email,
-            'name': user.get_full_name(),  
+            'name': user.name,  
             'username': user.username,
         }
 

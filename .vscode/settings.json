@@ -1,0 +1,5 @@
+{
+  "python.formatting.provider": "autopep8",
+  "editor.formatOnSave": true,
+  "python.formatting.autopep8Args": ["in-place = true", "aggressive = 2"]
+}
