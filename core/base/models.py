@@ -7,16 +7,30 @@ import uuid
 class BaseModel(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     is_deleted = models.BooleanField(default=False)
-    name = models.CharField(max_length=128, null=True, blank=True)
-    slug = models.CharField(max_length=128, null=True, blank=True)
+    slug = models.CharField(max_length=256, null=True)
     # DATES
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    deleted_at = models.DateTimeField(default=None, null=True)
+    created_on = models.DateTimeField(auto_now_add=True)
+    updated_on = models.DateTimeField(auto_now=True)
+    deleted_on = models.DateTimeField(default=None, null=True)
     # TRANSACTORS
-    created_by = models.ForeignKey("user.User", on_delete=models.CASCADE, null=True)
-    updated_by = models.ForeignKey("user.User", on_delete=models.CASCADE, null=True)
-    deleted_by = models.ForeignKey("user.User", on_delete=models.CASCADE, null=True)
+    created_by = models.ForeignKey(
+        "user.User",
+        on_delete=models.CASCADE,
+        null=True,
+        related_name="created_%(class)s_set",
+    )
+    updated_by = models.ForeignKey(
+        "user.User",
+        on_delete=models.CASCADE,
+        null=True,
+        related_name="updated_%(class)s_set",
+    )
+    deleted_by = models.ForeignKey(
+        "user.User",
+        on_delete=models.CASCADE,
+        null=True,
+        related_name="deleted_%(class)s_set",
+    )
 
     class Meta:
         abstract = True

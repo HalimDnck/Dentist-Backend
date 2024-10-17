@@ -18,22 +18,25 @@ class CustomPagination(PageNumberPagination):
 
         return super().paginate_queryset(queryset, request, view)
 
+    def get_paginated_response(self, data):
+        return Response({"count": self.page.paginator.count, "results": data})
 
-class BaseViewSet(viewsets.ViewSet):
+
+# ModelViewSet kullanarak değişiklik yapıyoruz
+class BaseViewSet(viewsets.ModelViewSet):
     pagination_class = CustomPagination
 
     def get_serializer_class(self):
-        if self.action == "list" and self.list_serializer is not None:
+        if self.action == "list" and hasattr(self, "list_serializer"):
             return self.list_serializer
-        elif self.action == "retrieve" and self.retrieve_serializer is not None:
+        elif self.action == "retrieve" and hasattr(self, "retrieve_serializer"):
             return self.retrieve_serializer
-        elif self.action == "create" and self.create_serializer is not None:
+        elif self.action == "create" and hasattr(self, "create_serializer"):
             return self.create_serializer
-        elif self.action == "update" and self.update_serializer is not None:
-            return self.update_serializer
-        elif self.action == "partial_update" and self.update_serializer is not None:
-            return self.update_serializer
-        return self.serializer
+        elif self.action == "update" or self.action == "partial_update":
+            if hasattr(self, "update_serializer"):
+                return self.update_serializer
+        return self.serializer_class
 
     def get_serializer(self, *args, **kwargs):
         serializer_class = self.get_serializer_class()
@@ -48,13 +51,13 @@ class BaseViewSet(viewsets.ViewSet):
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
-
-        ordering = request.query_params.get("ordering")
-        if ordering:
-            queryset = queryset.order_by(ordering)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
 
         serializer = self.get_serializer(queryset, many=True)
-        return self.get_paginated_response(serializer.data)
+        return self.success_response(serializer.data)
 
     def perform_destroy(self, instance):
         # is_deleted flag'ini True yapıyoruz
@@ -70,20 +73,6 @@ class BaseViewSet(viewsets.ViewSet):
 
     def perform_update(self, serializer):
         serializer.save(updated_by=self.request.user)
-
-    def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        return self.success_response(serializer.data)
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-
-        if serializer.is_valid():
-            instance = serializer.save()
-            return self.success_response(serializer.data, status_code=201)
-
-        return self.error_response(serializer.errors, status_code=400)
 
     def success_response(self, data, status_code=200):
         return Response({"status": "success", "data": data}, status=status_code)
